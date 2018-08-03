@@ -4700,6 +4700,7 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
         runtimeLock.read();
         // Don't cache the result; we don't hold the lock so it may have 
         // changed already. Re-do the search from scratch instead.
+        //判断是否解析过
         triedResolver = YES;
         goto retry;
     }
