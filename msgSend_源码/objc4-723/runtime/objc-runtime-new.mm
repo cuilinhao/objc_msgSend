@@ -4398,7 +4398,8 @@ static method_t *findMethodInSortedMethodList(SEL key, const method_list_t *list
     const method_t *probe;
     uintptr_t keyValue = (uintptr_t)key;
     uint32_t count;
-    
+    ////二分查找   直接拿出最中间的值比较，8在中间后面
+    //
     for (count = list->count; count != 0; count >>= 1) {
         probe = base + (count >> 1);
         
@@ -4432,10 +4433,11 @@ static method_t *search_method_list(const method_list_t *mlist, SEL sel)
 {
     int methodListIsFixedUp = mlist->isFixedUp();
     int methodListHasExpectedSize = mlist->entsize() == sizeof(method_t);
-    
+    //排序搜索
     if (__builtin_expect(methodListIsFixedUp && methodListHasExpectedSize, 1)) {
         return findMethodInSortedMethodList(sel, mlist);
     } else {
+        //线性查找
         // Linear search of unsorted method list
         for (auto& meth : *mlist) {
             if (meth.name == sel) return &meth;
@@ -4691,7 +4693,8 @@ IMP lookUpImpOrForward(Class cls, SEL sel, id inst,
             }
         }
     }
-
+    
+    //没有找到，就会尝试消息解析
     // No implementation found. Try method resolver once.
 
     if (resolver  &&  !triedResolver) {

@@ -266,9 +266,13 @@ LExit$0:
 	ldp	x9, x17, [x12]		// {x9, x17} = *bucket
 1:	cmp	x9, x1			// if (bucket->sel != _cmd)
 	b.ne	2f			//     scan more
+    //hit 命中，则返回
 	CacheHit $0			// call or return imp
 	
 2:	// not hit: x12 = not-hit bucket
+    /**
+     CheckMiss 缓存没有命中
+     */
 	CheckMiss $0			// miss if bucket->sel == 0
 	cmp	x12, x10		// wrap if bucket == buckets
 	b.eq	3f
@@ -301,15 +305,21 @@ _objc_debug_taggedpointer_classes:
 _objc_debug_taggedpointer_ext_classes:
 	.fill 256, 8, 0
 
+//_objc_msgSend 方法实现
 	ENTRY _objc_msgSend
 	UNWIND _objc_msgSend, NoFrame
 	MESSENGER_START
 
 	cmp	x0, #0			// nil check and tagged pointer check
-	b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)
+    /*
+     x0 就是寄存器，里面放的是消息接受者 receiver， x0就是objc_msgSend方法中传进去的第一个参数 b 是跳转， le是小于等于，如果小于等于0 则，跳转到LNilOrTagged，
+     意思就是看消息接受者是不是0，如果是0 ，则return
+     */
+    b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)
 	ldr	x13, [x0]		// x13 = isa
 	and	x16, x13, #ISA_MASK	// x16 = class	
 LGetIsaDone:
+    //CacheLookup 意思是缓存查找，它是一个宏，在242行右侧注释可以看出CacheLookup用来查找缓存
 	CacheLookup NORMAL		// calls imp or objc_msgSend_uncached
 
 LNilOrTagged:
